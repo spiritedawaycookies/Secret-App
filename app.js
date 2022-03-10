@@ -1,7 +1,7 @@
 //console.log(process.env)
 //configure dovenv dont forget to put .env in gitignore
 
-require('dotenv').config()
+require('dotenv').config();
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -77,14 +77,16 @@ passport.deserializeUser(function(id, done) {
 });
 
 passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:5000/auth/google/secrets",
-  //  callbackURL: "https://salty-mountain-54617.herokuapp.com/auth/google/secrets",
-    userProfileURL:"https://www.googleapis.com/oauth2/v3/userinfo"
+
+
+  clientID: process.env.CLIENT_ID,
+  clientSecret: process.env.CLIENT_SECRET,
+  callbackURL: "https://salty-mountain-54617.herokuapp.com/auth/google/secrets",
+  userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
   },
   function(accessToken, refreshToken, profile, cb) {
-    //console.log(profile);
+    console.log(profile);
+    //console.log(clientID);
     User.findOrCreate({ googleId: profile.id }, function (err, user) {
       return cb(err, user);
     });
@@ -198,14 +200,9 @@ app.get('/logout',(req,res)=>{
   res.redirect('/');
 });
 
-/////////////////////heroku////////////////////////
-let port = process.env.PORT;
-if (port == null || port == "") {
-  port = 33334;
-}
 
 //////////////////////alt local port///////////////////////
 
-app.listen(port, function() {
-  console.log(`server started on port ${port}`);
+app.listen(5000, function() {
+  console.log(`server started on port 5000`);
 });
