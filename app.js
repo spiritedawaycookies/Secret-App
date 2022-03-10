@@ -11,9 +11,14 @@ const mongoose = require("mongoose");
 const session = require('express-session');
 const passport = require('passport');
 const passportLocalMongoose = require('passport-local-mongoose');
-///////////////////////////////////////////////////
-const app = express();
+////////////////////////OAUTH//////////////////////////
 
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+
+///////////////////////////////////////////////////
+const findOrCreate=require('mongoose-findorcreate');
+
+const app = express();
 //express session- set up
 app.use(session({
   secret: 'keyboard cat',
@@ -33,15 +38,24 @@ app.use(bodyParser.urlencoded({
 
 app.use(express.static("public"));
 ///////////////////////////////////////////////////
-const uri = "mongodb://localhost:27017/userDB"
+const uri = "mongodb+srv://hongn:mznLLqQF5og4ZvU1@cluster0.nhfgr.mongodb.net/userDB?retryWrites=true&w=majority"
 // const uri =
 //   "mongodb+srv://hongn:mznLLqQF5og4ZvU1@cluster0.nhfgr.mongodb.net/blogDB?retryWrites=true&w=majority";
 mongoose.connect(uri);
+
+
+const secretsSchema = new mongoose.Schema({
+  name: String
+});
+const Secret = mongoose.model("Secret", secretsSchema);
 const userSchema = new mongoose.Schema({
   email: String,
-  password: String
+  password: String,
+  googleId:String,
+  secrets:[secretsSchema]
 });
 userSchema.plugin(passportLocalMongoose); //hash and salt passwords and save in database
+userSchema.plugin(findOrCreate);
 ////////////////////////enviroenent encryption key////////////////////////////
 //console.log(process.env.API_KEY);//access to environment variables
 //const secret = process.env.SECRET;
@@ -49,14 +63,48 @@ userSchema.plugin(passportLocalMongoose); //hash and salt passwords and save in 
 const User = new mongoose.model("User", userSchema);
 passport.use(User.createStrategy());
 
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+// used to serialize the user for the session
+passport.serializeUser(function(user, done) {
+    done(null, user.id);
+   // where is this user.id going? Are we supposed to access this anywhere?
+});
 
+// used to deserialize the user
+passport.deserializeUser(function(id, done) {
+    User.findById(id, function(err, user) {
+        done(err, user);
+    });
+});
+
+passport.use(new GoogleStrategy({
+    clientID: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
+    callbackURL: "http://localhost:33333/auth/google/secrets",
+    userProfileURL:"https://www.googleapis.com/oauth2/v3/userinfo"
+  },
+  function(accessToken, refreshToken, profile, cb) {
+    //console.log(profile);
+    User.findOrCreate({ googleId: profile.id }, function (err, user) {
+      return cb(err, user);
+    });
+  }
+));
 ////////////////////////////////////////////////////////////////////////
 
 app.get('/', (req, res) => {
   res.render("home");
 });
+
+app.get('/auth/google',
+  passport.authenticate("google",{ scope: ["profile"]} )
+);
+
+app.get('/auth/google/secrets',
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/secrets');
+  });
 
 app.get('/login', (req, res) => {
   res.render("login");
@@ -67,8 +115,43 @@ app.get('/register', (req, res) => {
 });
 
 app.get('/secrets', (req, res) => {
-  if (req.isAuthenticated()) res.render("secrets");
+  //see all secrets
+  User.find({"secrets":{$ne:null}},(err,foundUsers)=>{
+    if(err) console.log(err);
+    else{
+      if(foundUsers){
+        res.render("secrets",{usersWithSecrets:foundUsers});
+      }
+    }
+  });
+  //see your own secrets
+  // if (req.isAuthenticated()) res.render("secrets");
+  // else res.redirect('/login');
+});
+
+app.get('/submit',(req,res)=>{
+
+  if (req.isAuthenticated()) res.render("submit");
   else res.redirect('/login');
+});
+
+app.post('/submit',(req,res)=>{
+  const submittedSecret=req.body.newsecret;
+  console.log(req.body.newsecret);
+  const secret = new Secret({
+    name: submittedSecret
+  });
+  User.findById(req.user.id,(err,foundUser)=>{
+    if(err) console.log(err);
+    else{
+      if(foundUser){
+        foundUser.secrets.push(secret);
+        foundUser.save().then(() => {
+          res.redirect('/secrets');
+        });;
+      }
+    }
+  });
 });
 
 app.post('/register', (req, res) => {
@@ -114,6 +197,14 @@ app.get('/logout',(req,res)=>{
   res.redirect('/');
 });
 
-app.listen(33333, function() {
-  console.log("Server started on port 33333");
+/////////////////////heroku////////////////////////
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 33334;
+}
+
+//////////////////////alt local port///////////////////////
+
+app.listen(port, function() {
+  console.log(`server started on port ${port}`);
 });
