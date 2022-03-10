@@ -79,7 +79,8 @@ passport.deserializeUser(function(id, done) {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "https://salty-mountain-54617.herokuapp.com/auth/google/secrets",
+    callbackURL: "http://localhost:5000/auth/google/secrets",
+  //  callbackURL: "https://salty-mountain-54617.herokuapp.com/auth/google/secrets",
     userProfileURL:"https://www.googleapis.com/oauth2/v3/userinfo"
   },
   function(accessToken, refreshToken, profile, cb) {
