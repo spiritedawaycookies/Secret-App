@@ -75,13 +75,11 @@ passport.deserializeUser(function(id, done) {
         done(err, user);
     });
 });
-
+const herokuURI="http://salty-mountain-54617.herokuapp.com"
 passport.use(new GoogleStrategy({
-
-
   clientID: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
-  callbackURL: "https://salty-mountain-54617.herokuapp.com/auth/google/secrets",
+  callbackURL: herokuURI+"/auth/google/secrets",
   userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
   },
   function(accessToken, refreshToken, profile, cb) {
@@ -95,6 +93,7 @@ passport.use(new GoogleStrategy({
 ////////////////////////////////////////////////////////////////////////
 
 app.get('/', (req, res) => {
+//  console.log(process.env.CLIENT_ID);
   res.render("home");
 });
 
