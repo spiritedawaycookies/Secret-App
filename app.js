@@ -75,7 +75,7 @@ passport.deserializeUser(function(id, done) {
         done(err, user);
     });
 });
-const herokuURI="http://salty-mountain-54617.herokuapp.com"
+const herokuURI="https://salty-mountain-54617.herokuapp.com"
 passport.use(new GoogleStrategy({
   clientID:"705186284028-40l65npubgmcc30lkunn5nkv2vif7knj.apps.googleusercontent.com",
   clientSecret:"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",
