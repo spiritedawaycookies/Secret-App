@@ -38,9 +38,8 @@ app.use(bodyParser.urlencoded({
 
 app.use(express.static("public"));
 ///////////////////////////////////////////////////
-const uri = "mongodb+srv://hongn:mznLLqQF5og4ZvU1@cluster0.nhfgr.mongodb.net/userDB?retryWrites=true&w=majority"
-// const uri =
-//   "mongodb+srv://hongn:mznLLqQF5og4ZvU1@cluster0.nhfgr.mongodb.net/blogDB?retryWrites=true&w=majority";
+const uri = "mongodb+srv://xxx:xxx@cluster0.nhfgr.mongodb.net/userDB?retryWrites=true&w=majority"
+
 mongoose.connect(uri);
 
 
@@ -75,10 +74,10 @@ passport.deserializeUser(function(id, done) {
         done(err, user);
     });
 });
-const herokuURI="https://salty-mountain-54617.herokuapp.com"
+const herokuURI="https://xxx.herokuapp.com"
 passport.use(new GoogleStrategy({
-  clientID:"705186284028-40l65npubgmcc30lkunn5nkv2vif7knj.apps.googleusercontent.com",
-  clientSecret:"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",
+  clientID:"xxx.apps.googleusercontent.com",
+  clientSecret:"xxx",
   //clientID: process.env.CLIENT_ID,
   //clientSecret: process.env.CLIENT_SECRET,
   callbackURL: herokuURI+"/auth/google/secrets",
